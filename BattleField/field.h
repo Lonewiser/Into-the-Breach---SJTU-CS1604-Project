@@ -31,11 +31,17 @@ public:
     // Return false if the target coordinate is already occupied
     bool moveUnit(int srow, int scol, int trow, int tcol);
 
+    // Attack a unit at (trow, tcol) with the unit
+    bool attackUnit(Unit *u, int trow, int tcol);
+
 private:
     // Store the units
     Grid<Unit *> units;
     // Store the terrains
     Grid<Terrain> terrains;
+
+    // BeatBack
+    void beatBack(int srow, int scol, Unit *u);
 };
 
 #endif // FIELD_H_INCLUDED

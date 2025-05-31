@@ -12,7 +12,9 @@ using namespace std;
 void printHLine(ostream &os, int n);
 string getDpSymbol(dp_mode dp);
 Grid<int> getFieldCosts(const Field &field, Unit *u);
+bool performAction(Field &field, istream &is, ostream &os, Unit *u, Action act);
 bool performMove(ostream &os, istream &is, Field &field, Unit *u);
+bool performAttack(ostream &os, istream &is, Field &field, Unit *u);
 
 // load terrains and units into field
 void loadMap(std::istream &is, Field &field) {
@@ -47,6 +49,9 @@ void loadMap(std::istream &is, Field &field) {
         case 'T':
             field.setUnit(row, col, TANK);
             break;
+        case 'B':
+            field.setUnit(row, col, BEE);
+            break;
         }
     }
 
@@ -65,9 +70,13 @@ void play(Field &field, istream &is, ostream &os) {
         while (true) {
             os << "Please select a unit:" << endl;
             is >> row >> col;
-            if (field.getUnit(row, col) != nullptr) break;
-            // else if no unit at (row, col)
-            os << "No unit at (" << row << ", " << col << ")!" << endl;
+            if (field.getUnit(row, col) == nullptr) {
+                os << "No unit at (" << row << ", " << col << ")!" << endl;
+            } else if (field.getUnit(row, col)->getSide() == false) {
+                os << " Unit at (" << row << ", " << col << ") is an enemy!" << endl;
+            } else {
+                break; // valid unit selected
+            }
         }
         u = field.getUnit(row, col);
 
@@ -84,6 +93,9 @@ void play(Field &field, istream &is, ostream &os) {
                 switch (actionList[i]) {
                 case MOVE:
                     os << i + 1 << ". Move ";
+                    break;
+                case ATTACK:
+                    os << i + 1 << ". Attack ";
                     break;
                 case SKIP:
                     os << i + 1 << ". Skip ";
@@ -163,6 +175,7 @@ void printHLine(ostream &os, int n) {
 // symbol used in displayField
 string getDpSymbol(dp_mode dp) {
     if (dp == DP_MOVE) return ".";
+    if (dp == DP_ATTACK) return "*";
 
     return " ";
 }
@@ -171,6 +184,9 @@ bool performAction(Field &field, istream &is, ostream &os, Unit *u, Action act) 
     switch (act) {
     case MOVE:
         return performMove(os, is, field, u);
+
+    case ATTACK:
+        return performAttack(os, is, field, u);
 
     case SKIP:
         return true;
@@ -182,7 +198,6 @@ bool performAction(Field &field, istream &is, ostream &os, Unit *u, Action act) 
 }
 
 // Perform the move action
-// The implementation is incomplete
 bool performMove(ostream &os, istream &is, Field &field, Unit *u) {
     // Display the reachable points
     Grid<bool> grd =
@@ -193,16 +208,37 @@ bool performMove(ostream &os, istream &is, Field &field, Unit *u) {
     // Ask for the target coordinate
     int trow, tcol;
     while (true) {
-        os << "Please enter the target coordinate (row col): ";
+        os << "Please enter your destination: " << endl;
         is >> trow >> tcol;
 
         if (grd.inBounds(trow, tcol) && grd[trow][tcol]) break;
         // else if the target coordinate is not reachable
         os << "Not a valid destination" << endl;
     }
-    field.moveUnit(u->getRow(), u->getCol(), trow, tcol);
+    return field.moveUnit(u->getRow(), u->getCol(), trow, tcol);
+}
 
-    return true;
+bool performAttack(ostream &os, istream &is, Field &field, Unit *u) {
+    // Display the reachable points
+    Grid<bool> grd;
+    if (u->getType() == SOLDIER || u->getType() == BEE)
+        grd = searchCloseAttackable(field, u->getRow(), u->getCol());
+    else
+        grd = searchFarAttackable(field, u->getRow(), u->getCol());
+
+    displayField(os, field, grd, DP_ATTACK);
+
+    // Ask for the target coordinate
+    int trow, tcol;
+    while (true) {
+        os << "Please enter your target: " << endl;
+        is >> trow >> tcol;
+
+        if (grd.inBounds(trow, tcol) && grd[trow][tcol]) break;
+        // else if the target coordinate is not reachable
+        os << "Not a valid target" << endl;
+    }
+    return field.attackUnit(u, trow, tcol);
 }
 
 // Convert field to costs

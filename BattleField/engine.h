@@ -6,7 +6,7 @@
 
 // display mode used in function displayField
 enum dp_mode {
-  DP_DEFAULT, DP_MOVE,
+  DP_DEFAULT, DP_MOVE, DP_ATTACK
 };
 
 // load terrains and units into field

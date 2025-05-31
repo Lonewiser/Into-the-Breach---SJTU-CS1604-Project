@@ -1,22 +1,22 @@
 #include "actions.h"
 #include "unit.h"
+#include "field.h"
 #include <cmath>
 #include <cassert>
 #include <vector>
 using namespace std;
 
 // Get actions that can be performed by a unit
-vector<Action> getActions(Unit* u)
-{
+vector<Action> getActions(Unit *u) {
     vector<Action> acts;
     acts.push_back(MOVE);
+    acts.push_back(ATTACK);
     acts.push_back(SKIP);
     return acts;
 }
 
 // Check if there is only skip
-bool isAllSkip(const vector<Action>& acts)
-{
+bool isAllSkip(const vector<Action> &acts) {
     for (size_t i = 0; i < acts.size(); i++)
         if (acts[i] != SKIP)
             return false;
@@ -24,8 +24,7 @@ bool isAllSkip(const vector<Action>& acts)
 }
 
 // Move units
-void moveUnit(Field& field, Unit* u, int trow, int tcol)
-{
+void moveUnit(Field &field, Unit *u, int trow, int tcol) {
     assert(u != NULL);
     int srow = u->getRow();
     int scol = u->getCol();
@@ -35,8 +34,7 @@ void moveUnit(Field& field, Unit* u, int trow, int tcol)
 }
 
 // Select unit
-SelectUResult selectUnit(const Field& field, bool side, int row, int col, Unit*& u)
-{
+SelectUResult selectUnit(const Field &field, bool side, int row, int col, Unit *&u) {
     u = field.getUnit(row, col);
     if (u == nullptr)
         return SELECTU_NO_UNIT;
