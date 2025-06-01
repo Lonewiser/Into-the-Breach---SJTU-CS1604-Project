@@ -127,7 +127,7 @@ void play(Field &field, istream &is, ostream &os) {
 
             // Ask if the player wants to skip their turn
             char skip_choice;
-            os << " End this turn (y,n)?" << endl;
+            os << "End this turn (y,n)?" << endl;
             is >> skip_choice;
             if (skip_choice == 'y' || skip_choice == 'Y') {
                 break;
@@ -142,9 +142,9 @@ void play(Field &field, istream &is, ostream &os) {
                 if (field.getUnit(row, col) == nullptr) {
                     os << "No unit at (" << row << ", " << col << ")!" << endl;
                 } else if (field.getUnit(row, col)->getSide() == false) {
-                    os << " Unit at (" << row << ", " << col << ") is an enemy!" << endl;
+                    os << "Unit at (" << row << ", " << col << ") is an enemy!" << endl;
                 } else if (!actionable[row][col]) {
-                    os << " Unit at (" << row << ", " << col << ") is not actable!" << endl;
+                    os << "Unit at (" << row << ", " << col << ") is not actable!" << endl;
                 } else {
                     break; // valid unit selected
                 }
@@ -155,22 +155,22 @@ void play(Field &field, istream &is, ostream &os) {
             vector<Action> actionList = getActions(u);
 
             int act;
-            while (true) {
-                for (int i = 0; i < actionList.size(); i++) {
-                    switch (actionList[i]) {
-                    case MOVE:
-                        os << i + 1 << ".Move ";
-                        break;
-                    case ATTACK:
-                        os << i + 1 << ".Attack ";
-                        break;
-                    case SKIP:
-                        os << i + 1 << ".Skip ";
-                        break;
-                    }
+            for (int i = 0; i < actionList.size(); i++) {
+                switch (actionList[i]) {
+                case MOVE:
+                    os << i + 1 << ".Move ";
+                    break;
+                case ATTACK:
+                    os << i + 1 << ".Attack ";
+                    break;
+                case SKIP:
+                    os << i + 1 << ".Skip ";
+                    break;
                 }
-                os << endl
-                   << "Select your action: " << endl;
+            }
+            os << endl;
+            while (true) {
+                os << "Select your action:" << endl;
 
                 is >> act;
                 if (act > 0 && act < actionList.size() + 1) break;
@@ -283,7 +283,7 @@ bool performMove(ostream &os, istream &is, Field &field, Unit *u) {
     // Ask for the target coordinate
     int trow, tcol;
     while (true) {
-        os << "Please enter your destination: " << endl;
+        os << "Please enter your destination:" << endl;
         is >> trow >> tcol;
 
         if (grd.inBounds(trow, tcol) && grd[trow][tcol]) break;
@@ -340,8 +340,9 @@ bool performEnemyAction(Field &field, Unit *u) {
             }
         }
     }
-    field.moveUnit(u->getRow(), u->getCol(), bestRow, bestCol);
     u->setMoved(true); // Mark the unit as moved
+    if (bestValue == -1) return false; 
+    field.moveUnit(u->getRow(), u->getCol(), bestRow, bestCol);
 
     // Attack
     Grid<bool> grd2 = searchCloseAttackable(field, u->getRow(), u->getCol());
@@ -378,9 +379,8 @@ Grid<int> getFieldCosts(const Field &field, Unit *u) {
             case TANK:
                 if (u->getRow() == i && u->getCol() == j) { // 当前单位
                     costs[i][j] = 0;
-                } else if (field.getUnit(i, j) == nullptr &&                  // 无单位
-                           (field.getTerrain(i, j).getType() == PLAIN         // 且是平原
-                            || field.getTerrain(i, j).getType() == FOREST)) { // 或者是森林
+                } else if (field.getUnit(i, j) == nullptr &&              // 无单位
+                           (field.getTerrain(i, j).getType() == PLAIN)) { // 或者是平原
                     costs[i][j] = 1;
                 } else { // 有单位或山或海
                     costs[i][j] = 100;
@@ -420,6 +420,7 @@ int getPositionValue(const Field &field, int row, int col) {
             }
         }
     }
+    if (min_distance == 999) return -1; // 如果没有找到己方单位，返回-1
     return 999 - min_distance;
 }
 

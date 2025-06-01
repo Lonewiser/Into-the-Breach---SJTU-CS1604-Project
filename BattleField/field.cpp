@@ -165,11 +165,6 @@ void Field::beatBack(int srow, int scol, Unit *u) {
             moveUnit(trow, tcol, newRow, newCol); // Move the unit to the new position
         }
         break;
-    case FOREST:
-        if (u->getType() == SOLDIER || u->getType() == TANK) {
-            moveUnit(trow, tcol, newRow, newCol); // Move the unit to the new position
-        }
-        break;
     default:
         break;
     }
