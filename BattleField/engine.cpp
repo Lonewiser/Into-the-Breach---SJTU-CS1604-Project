@@ -102,7 +102,7 @@ void play(Field &field, istream &is, ostream &os) {
             }
 
         if (enemyCount == 0) {
-            os << "won" << endl;
+            os << "Won" << endl;
             return; // Player wins
         } else if (playerCount == 0) {
             os << "Failed" << endl;
@@ -136,7 +136,7 @@ void play(Field &field, istream &is, ostream &os) {
 
             // Ask if the player wants to skip their turn
             char skip_choice;
-            os << " End this turn (y,n)?" << endl;
+            os << "End this turn (y,n)?" << endl;
             is >> skip_choice;
             if (skip_choice == 'y' || skip_choice == 'Y') {
                 break;
@@ -151,9 +151,9 @@ void play(Field &field, istream &is, ostream &os) {
                 if (field.getUnit(row, col) == nullptr) {
                     os << "No unit at (" << row << ", " << col << ")!" << endl;
                 } else if (field.getUnit(row, col)->getSide() == false) {
-                    os << " Unit at (" << row << ", " << col << ") is an enemy!" << endl;
+                    os << "Unit at (" << row << ", " << col << ") is an enemy!" << endl;
                 } else if (!actionable[row][col]) {
-                    os << " Unit at (" << row << ", " << col << ") is not actable!" << endl;
+                    os << "Unit at (" << row << ", " << col << ") is not actable!" << endl;
                 } else {
                     break; // valid unit selected
                 }
@@ -164,22 +164,22 @@ void play(Field &field, istream &is, ostream &os) {
             vector<Action> actionList = getActions(u);
 
             int act;
-            while (true) {
-                for (int i = 0; i < actionList.size(); i++) {
-                    switch (actionList[i]) {
-                    case MOVE:
-                        os << i + 1 << ".Move ";
-                        break;
-                    case ATTACK:
-                        os << i + 1 << ".Attack ";
-                        break;
-                    case SKIP:
-                        os << i + 1 << ".Skip ";
-                        break;
-                    }
+            for (int i = 0; i < actionList.size(); i++) {
+                switch (actionList[i]) {
+                case MOVE:
+                    os << i + 1 << ".Move ";
+                    break;
+                case ATTACK:
+                    os << i + 1 << ".Attack ";
+                    break;
+                case SKIP:
+                    os << i + 1 << ".Skip ";
+                    break;
                 }
-                os << endl
-                   << "Select your action: " << endl;
+            }
+            os << endl;
+            while (true) {
+                os << "Select your action:" << endl;
 
                 is >> act;
                 if (act > 0 && act < actionList.size() + 1) break;
@@ -306,7 +306,7 @@ bool performMove(ostream &os, istream &is, Field &field, Unit *u) {
     // Ask for the target coordinate
     int trow, tcol;
     while (true) {
-        os << "Please enter your destination: " << endl;
+        os << "Please enter your destination:" << endl;
         is >> trow >> tcol;
 
         if (grd.inBounds(trow, tcol) && grd[trow][tcol]) break;
@@ -333,7 +333,7 @@ bool performAttack(ostream &os, istream &is, Field &field, Unit *u) {
     // Ask for the target coordinate
     int trow, tcol;
     while (true) {
-        os << "Please enter your target: " << endl;
+        os << "Please enter your target:" << endl;
         is >> trow >> tcol;
 
         if (grd.inBounds(trow, tcol) && grd[trow][tcol]) break;
@@ -365,8 +365,9 @@ bool performEnemyAction(Field &field, Unit *u) {
             }
         }
     }
+    u->setMoved(true);                 // Mark the unit as moved
+    if (bestValue == -1) return false; // No valid position to move
     field.moveUnit(u->getRow(), u->getCol(), bestRow, bestCol);
-    u->setMoved(true); // Mark the unit as moved
 
     // Attack
     Grid<bool> grd2 = searchCloseAttackable(field, u->getRow(), u->getCol());
@@ -447,6 +448,7 @@ int getPositionValue(const Field &field, int row, int col) {
             }
         }
     }
+    if (min_distance == 999) return -1;
     return 999 - min_distance;
 }
 
