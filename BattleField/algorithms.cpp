@@ -105,16 +105,13 @@ Grid<bool> searchReachable(const Grid<int> &costs, int row, int col, int mvPts) 
 }
 
 Grid<bool> searchCloseAttackable(const Field &field, int row, int col) {
-    Grid<bool> attackable(field.getHeight(), field.getWidth());
+    Grid<bool> attackable(field.getHeight(), field.getWidth(), false);
 
     // Check the adjacent squares
-    for (int r = row - 1; r <= row + 1; r++) {
-        for (int c = col - 1; c <= col + 1; c++) {                     // 遍历九个格子
-            if ((r == row || c == col) && attackable.inBounds(r, c)) { // 如果同行列且在范围内
-                attackable[r][c] = true;
-            }
-        }
-    }
+    if (attackable.inBounds(row - 1, col)) attackable[row - 1][col] = true; // North
+    if (attackable.inBounds(row + 1, col)) attackable[row + 1][col] = true; // South
+    if (attackable.inBounds(row, col + 1)) attackable[row][col + 1] = true; // East
+    if (attackable.inBounds(row, col - 1)) attackable[row][col - 1] = true; // West
     return attackable;
 }
 

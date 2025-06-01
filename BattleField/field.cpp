@@ -160,6 +160,8 @@ void Field::beatBack(int srow, int scol, Unit *u) {
     case OCEAN:
         if (u->getType() == SOLDIER || u->getType() == TANK) {
             u->attacked(999); // get destroyed
+        } else {
+            moveUnit(trow, tcol, newRow, newCol); // Move the unit to the new position
         }
         break;
     default:

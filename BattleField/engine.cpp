@@ -73,7 +73,7 @@ void play(Field &field, istream &is, ostream &os) {
             if (field.getUnit(row, col) == nullptr) {
                 os << "No unit at (" << row << ", " << col << ")!" << endl;
             } else if (field.getUnit(row, col)->getSide() == false) {
-                os << " Unit at (" << row << ", " << col << ") is an enemy!" << endl;
+                os << "Unit at (" << row << ", " << col << ") is an enemy!" << endl;
             } else {
                 break; // valid unit selected
             }
@@ -88,22 +88,22 @@ void play(Field &field, istream &is, ostream &os) {
         // }
 
         int act;
-        while (true) {
-            for (int i = 0; i < actionList.size(); i++) {
-                switch (actionList[i]) {
-                case MOVE:
-                    os << i + 1 << ". Move ";
-                    break;
-                case ATTACK:
-                    os << i + 1 << ". Attack ";
-                    break;
-                case SKIP:
-                    os << i + 1 << ". Skip ";
-                    break;
-                }
+        for (int i = 0; i < actionList.size(); i++) {
+            switch (actionList[i]) {
+            case MOVE:
+                os << i + 1 << ".Move ";
+                break;
+            case ATTACK:
+                os << i + 1 << ".Attack ";
+                break;
+            case SKIP:
+                os << i + 1 << ".Skip ";
+                break;
             }
-            os << endl
-               << "Select your action: " << endl;
+        }
+        os << endl;
+        while (true) {
+            os << "Select your action:" << endl;
 
             is >> act;
             if (act > 0 && act < actionList.size() + 1) break;
@@ -231,7 +231,7 @@ bool performAttack(ostream &os, istream &is, Field &field, Unit *u) {
     // Ask for the target coordinate
     int trow, tcol;
     while (true) {
-        os << "Please enter your target: " << endl;
+        os << "Please enter your target:" << endl;
         is >> trow >> tcol;
 
         if (grd.inBounds(trow, tcol) && grd[trow][tcol]) break;
