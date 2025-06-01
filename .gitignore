@@ -1,2 +1,4 @@
 .vscode
 main.exe
+source
+*.out-wrong.txt

@@ -18,12 +18,6 @@ Unit::Unit(UnitType t, bool sd, int row, int col) :
     case BEE:
         hp = 2;
         break;
-    case FLIGHTER:
-        hp = 2;
-        break;
-    case HYDRAULISK:
-        hp = 1;
-        break;
 
     default:
         break;
@@ -42,12 +36,6 @@ string Unit::getSymbol() const {
         break;
     case BEE:
         symbol = side ? "B" : "b";
-        break;
-    case FLIGHTER:
-        symbol = side ? "F" : "f";
-        break;
-    case HYDRAULISK:
-        symbol = side ? "H" : "h";
         break;
     }
     symbol += to_string(hp);
@@ -97,10 +85,6 @@ int Unit::getMovPoints() const {
         return 2;
     case BEE:
         return 3;
-    case FLIGHTER:
-        return 5;
-    case HYDRAULISK:
-        return 3;
     default:
         return 0;
     }
@@ -115,10 +99,6 @@ int Unit::getAttackPoints() const {
         return 1;
     case BEE:
         return 3;
-    case FLIGHTER:
-        return 2;
-    case HYDRAULISK:
-        return 2;
     default:
         return 0; // Default to 0 for unknown types
     }

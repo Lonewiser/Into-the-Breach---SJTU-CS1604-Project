@@ -153,16 +153,3 @@ Grid<bool> searchFarAttackable(const Field &field, int row, int col) {
     }
     return attackable;
 }
-
-// 上下左右相邻并且间隔1的格子
-Grid<bool> searchFlightAttackable(const Field &field, int row, int col) {
-    Grid<bool> attackable(field.getHeight(), field.getWidth(), false);
-
-    // Check the adjacent squares
-    if (attackable.inBounds(row - 2, col)) attackable[row - 2][col] = true; // North
-    if (attackable.inBounds(row + 2, col)) attackable[row + 2][col] = true; // South
-    if (attackable.inBounds(row, col + 2)) attackable[row][col + 2] = true; // East
-    if (attackable.inBounds(row, col - 2)) attackable[row][col - 2] = true; // West
-
-    return attackable;
-}

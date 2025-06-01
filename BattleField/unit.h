@@ -7,8 +7,6 @@
 enum UnitType { SOLDIER,
                 TANK,
                 BEE,
-                FLIGHTER,
-                HYDRAULISK,
 };
 
 /* Class for units */
@@ -52,7 +50,7 @@ public:
     bool hasAttacked() const;
 
     void setMoved(bool m);
-    
+
     void setAttacked(bool a);
 
 private:

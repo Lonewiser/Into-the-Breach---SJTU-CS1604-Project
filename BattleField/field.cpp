@@ -39,7 +39,7 @@ void Field::setUnit(int row, int col, UnitType unitType) {
     if (units[row][col] != nullptr) {
         delete units[row][col]; // Delete the existing unit
     }
-    if (unitType == SOLDIER || unitType == TANK || unitType == FLIGHTER)
+    if (unitType == SOLDIER || unitType == TANK)
         units[row][col] = new Unit(unitType, true, row, col); // Create a new unit
     else
         units[row][col] = new Unit(unitType, false, row, col); // Create a new unit
@@ -100,29 +100,6 @@ bool Field::attackUnit(Unit *u, int trow, int tcol) {
             beatBack(u->getRow(), u->getCol(), target);
         }
         break;
-    case FLIGHTER:
-        if (target != nullptr) {
-            target->receiveDamage(u->getAttackPoints());
-        }
-        // beat back four directions
-        if (units.inBounds(trow - 1, tcol) && units[trow - 1][tcol] != nullptr) {
-            beatBack(trow, tcol, units[trow - 1][tcol]);
-        }
-        if (units.inBounds(trow + 1, tcol) && units[trow + 1][tcol] != nullptr) {
-            beatBack(trow, tcol, units[trow + 1][tcol]);
-        }
-        if (units.inBounds(trow, tcol - 1) && units[trow][tcol - 1] != nullptr) {
-            beatBack(trow, tcol, units[trow][tcol - 1]);
-        }
-        if (units.inBounds(trow, tcol + 1) && units[trow][tcol + 1] != nullptr) {
-            beatBack(trow, tcol, units[trow][tcol + 1]);
-        }
-        break;
-    case HYDRAULISK:
-        if (target != nullptr) {
-            target->receiveDamage(u->getAttackPoints());
-            beatBack(u->getRow(), u->getCol(), target);
-        }
     default:
         break;
     }
@@ -182,14 +159,14 @@ void Field::beatBack(int srow, int scol, Unit *u) {
         terrains[newRow][newCol].setType(PLAIN); // MOUNTAIN becomes PLAIN
         break;
     case OCEAN:
-        if (u->getType() == SOLDIER || u->getType() == TANK || u->getType() == HYDRAULISK) {
+        if (u->getType() == SOLDIER || u->getType() == TANK) {
             u->receiveDamage(999); // get destroyed
         } else {
             moveUnit(trow, tcol, newRow, newCol); // Move the unit to the new position
         }
         break;
     case FOREST:
-        if (u->getType() == SOLDIER || u->getType() == TANK || u->getType() == HYDRAULISK) {
+        if (u->getType() == SOLDIER || u->getType() == TANK) {
             moveUnit(trow, tcol, newRow, newCol); // Move the unit to the new position
         }
         break;

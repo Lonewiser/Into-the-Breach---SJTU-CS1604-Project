@@ -37,9 +37,6 @@ void loadMap(std::istream &is, Field &field) {
         case 'O':
             field.setTerrain(row, col, OCEAN);
             break;
-        case 'W':
-            field.setTerrain(row, col, FOREST);
-            break;
         default:
             field.setTerrain(row, col, PLAIN);
         }
@@ -57,12 +54,6 @@ void loadMap(std::istream &is, Field &field) {
             break;
         case 'B':
             field.setUnit(row, col, BEE);
-            break;
-        case 'F':
-            field.setUnit(row, col, FLIGHTER);
-            break;
-        case 'H':
-            field.setUnit(row, col, HYDRAULISK);
             break;
         }
     }
@@ -102,7 +93,7 @@ void play(Field &field, istream &is, ostream &os) {
             }
 
         if (enemyCount == 0) {
-            os << "won" << endl;
+            os << "Won" << endl;
             return; // Player wins
         } else if (playerCount == 0) {
             os << "Failed" << endl;
@@ -202,20 +193,6 @@ void play(Field &field, istream &is, ostream &os) {
                     if (unit->hasMoved()) continue;
                     // Perform actions fors the enemy unit
                     performEnemyAction(field, unit);
-                }
-            }
-        }
-
-        // FOREST's special effect ////////////////////////////////////////////////////////
-        for (int i = 0; i < field.getHeight(); i++) {
-            for (int j = 0; j < field.getWidth(); j++) {
-                if (field.getTerrain(i, j).getType() == FOREST) {
-                    for (int r = i - 2; r <= i + 2; r++) {
-                        for (int c = j - 2; c <= j + 2; c++) {
-                            if (actionable.inBounds(r, c) && field.getUnit(r, c) != nullptr)
-                                field.getUnit(r, c)->receiveDamage(-1); // Heal the unit
-                        }
-                    }
                 }
             }
         }
@@ -323,8 +300,6 @@ bool performAttack(ostream &os, istream &is, Field &field, Unit *u) {
     Grid<bool> grd;
     if (u->getType() == TANK)
         grd = searchFarAttackable(field, u->getRow(), u->getCol());
-    else if (u->getType() == FLIGHTER)
-        grd = searchFlightAttackable(field, u->getRow(), u->getCol());
     else
         grd = searchCloseAttackable(field, u->getRow(), u->getCol());
 
@@ -401,7 +376,6 @@ Grid<int> getFieldCosts(const Field &field, Unit *u) {
             switch (u->getType()) {
             case SOLDIER:
             case TANK:
-            case HYDRAULISK:
                 if (u->getRow() == i && u->getCol() == j) { // 当前单位
                     costs[i][j] = 0;
                 } else if (field.getUnit(i, j) == nullptr &&                  // 无单位
@@ -413,7 +387,6 @@ Grid<int> getFieldCosts(const Field &field, Unit *u) {
                 }
                 break;
             case BEE:
-            case FLIGHTER:
                 if (u->getRow() == i && u->getCol() == j) { // 当前单位
                     costs[i][j] = 0;
                 } else if (field.getUnit(i, j) == nullptr &&                 // 无单位

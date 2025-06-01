@@ -7,7 +7,6 @@
 enum TerrainType { PLAIN,
                    MOUNTAIN,
                    OCEAN,
-                   FOREST,
 };
 
 class Terrain {

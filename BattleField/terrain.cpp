@@ -14,8 +14,6 @@ std::string Terrain::getSymbol() {
         return "/\\";
     case OCEAN:
         return "~~";
-    case FOREST:
-        return "\\/";
     }
 
     // assert(false);
