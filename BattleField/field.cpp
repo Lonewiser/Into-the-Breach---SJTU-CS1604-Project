@@ -58,5 +58,17 @@ bool Field::moveUnit(int srow, int scol, int trow, int tcol) {
     assert(units.inBounds(srow, scol));
     assert(units.inBounds(trow, tcol));
 
+    if (units[trow][tcol] != nullptr) {
+        // Target cell is already occupied
+        return false;
+    }
+
+    // Move the unit from (srow, scol) to (trow, tcol)
+    Unit *unit = units[srow][scol];
+    assert(unit != nullptr);     // Ensure there is a unit to move
+    units[trow][tcol] = unit;    // Place the unit in the new position
+    units[srow][scol] = nullptr; // Clear the old position
+    unit->setCoord(trow, tcol);  // Update the unit's coordinates
+
     return true;
 }

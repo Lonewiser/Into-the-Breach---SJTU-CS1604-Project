@@ -50,6 +50,8 @@ int Unit::getMovPoints() const {
     switch (type) {
     case SOLDIER:
         return 3;
+    case TANK:
+        return 2;
     default:
         return 0;
     }

@@ -4,7 +4,9 @@
 #include <string>
 
 /* Type of Units */
-enum UnitType {SOLDIER, TANK, };
+enum UnitType { SOLDIER,
+                TANK,
+};
 
 /* Class for units */
 class Unit {
@@ -29,6 +31,10 @@ public:
 
     // Get movement point, which depends on unit type
     int getMovPoints() const;
+
+    UnitType getType() const {
+        return type;
+    }
 
 private:
     UnitType type;

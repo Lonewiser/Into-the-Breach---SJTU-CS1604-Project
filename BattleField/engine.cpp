@@ -12,6 +12,7 @@ using namespace std;
 void printHLine(ostream &os, int n);
 string getDpSymbol(dp_mode dp);
 Grid<int> getFieldCosts(const Field &field, Unit *u);
+bool performAction(Field &field, istream &is, ostream &os, Unit *u, Action act);
 bool performMove(ostream &os, istream &is, Field &field, Unit *u);
 
 // load terrains and units into field
@@ -79,19 +80,19 @@ void play(Field &field, istream &is, ostream &os) {
         // }
 
         int act;
-        while (true) {
-            for (int i = 0; i < actionList.size(); i++) {
-                switch (actionList[i]) {
-                case MOVE:
-                    os << i + 1 << ". Move ";
-                    break;
-                case SKIP:
-                    os << i + 1 << ". Skip ";
-                    break;
-                }
+        for (int i = 0; i < actionList.size(); i++) {
+            switch (actionList[i]) {
+            case MOVE:
+                os << i + 1 << ".Move ";
+                break;
+            case SKIP:
+                os << i + 1 << ".Skip ";
+                break;
             }
-            os << endl
-               << "Select your action: " << endl;
+        }
+        os << endl;
+        while (true) {
+            os << "Select your action: " << endl;
 
             is >> act;
             if (act > 0 && act < actionList.size() + 1) break;
@@ -193,7 +194,7 @@ bool performMove(ostream &os, istream &is, Field &field, Unit *u) {
     // Ask for the target coordinate
     int trow, tcol;
     while (true) {
-        os << "Please enter the target coordinate (row col): ";
+        os << "Please enter your destination: " << endl;
         is >> trow >> tcol;
 
         if (grd.inBounds(trow, tcol) && grd[trow][tcol]) break;
@@ -214,20 +215,19 @@ Grid<int> getFieldCosts(const Field &field, Unit *u) {
 
     for (int i = 0; i < h; i++)
         for (int j = 0; j < w; j++) {
-            // switch (field.getUnit(i, j)->getType()) {
-            //    case SOLDIER:
-            if (u->getRow() == i && u->getCol() == j) { // 当前单位
-                costs[i][j] = 0;
-            } else if (field.getUnit(i, j) == nullptr &&            // 无单位
-                       field.getTerrain(i, j).getType() == PLAIN) { // 且是平原
-                costs[i][j] = 1;
-            } else { // 有单位或非平原
-                costs[i][j] = 100;
+            switch (u->getType()) {
+            case SOLDIER:
+            case TANK:
+                if (u->getRow() == i && u->getCol() == j) { // 当前单位
+                    costs[i][j] = 0;
+                } else if (field.getUnit(i, j) == nullptr &&              // 无单位
+                           (field.getTerrain(i, j).getType() == PLAIN)) { // 且是平原
+                    costs[i][j] = 1;
+                } else { // 有单位或山或海
+                    costs[i][j] = 100;
+                }
+                break;
             }
-            //    break;
-            //    case TANK:
-            //    break;
-            // }
         }
 
     return costs;
