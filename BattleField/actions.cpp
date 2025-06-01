@@ -9,8 +9,8 @@ using namespace std;
 // Get actions that can be performed by a unit
 vector<Action> getActions(Unit *u) {
     vector<Action> acts;
-    acts.push_back(MOVE);
-    acts.push_back(ATTACK);
+    if (!u->hasMoved()) acts.push_back(MOVE);
+    if (!u->hasAttacked()) acts.push_back(ATTACK);
     acts.push_back(SKIP);
     return acts;
 }

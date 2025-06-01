@@ -13,5 +13,6 @@ Grid<bool> searchReachable(const Grid<int> &costs, int row, int col, int pts);
 
 Grid<bool> searchCloseAttackable(const Field &field, int row, int col);
 Grid<bool> searchFarAttackable(const Field &field, int row, int col);
+Grid<bool> searchFlightAttackable(const Field &field, int row, int col);
 
 #endif // ALGORITHMS_H_INCLUDED

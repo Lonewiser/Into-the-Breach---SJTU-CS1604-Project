@@ -6,7 +6,9 @@
 /* Type of Units */
 enum UnitType { SOLDIER,
                 TANK,
-                BEE
+                BEE,
+                FLIGHTER,
+                HYDRAULISK,
 };
 
 /* Class for units */
@@ -28,7 +30,7 @@ public:
     void move(int row, int col);
 
     // Being attacked
-    void attacked(int damage);
+    void receiveDamage(int damage);
 
     // Check which side the unit belongs to
     bool getSide() const;
@@ -45,9 +47,19 @@ public:
     // Get the unit type
     UnitType getType() const;
 
+    bool hasMoved() const;
+
+    bool hasAttacked() const;
+
+    void setMoved(bool m);
+    
+    void setAttacked(bool a);
+
 private:
     UnitType type;
     bool side;
+    bool moved;
+    bool attacked;
     int urow, ucol;
     int hp;
 };

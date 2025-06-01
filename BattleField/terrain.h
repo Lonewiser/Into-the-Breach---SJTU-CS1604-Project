@@ -6,7 +6,9 @@
 // TerrainType
 enum TerrainType { PLAIN,
                    MOUNTAIN,
-                   OCEAN };
+                   OCEAN,
+                   FOREST,
+};
 
 class Terrain {
 public:

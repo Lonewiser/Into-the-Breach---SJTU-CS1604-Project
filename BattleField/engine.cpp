@@ -15,6 +15,9 @@ Grid<int> getFieldCosts(const Field &field, Unit *u);
 bool performAction(Field &field, istream &is, ostream &os, Unit *u, Action act);
 bool performMove(ostream &os, istream &is, Field &field, Unit *u);
 bool performAttack(ostream &os, istream &is, Field &field, Unit *u);
+bool performEnemyAction(Field &field, Unit *u);
+int getPositionValue(const Field &field, int row, int col);
+int distance(int row1, int col1, int row2, int col2);
 
 // load terrains and units into field
 void loadMap(std::istream &is, Field &field) {
@@ -34,6 +37,9 @@ void loadMap(std::istream &is, Field &field) {
         case 'O':
             field.setTerrain(row, col, OCEAN);
             break;
+        case 'W':
+            field.setTerrain(row, col, FOREST);
+            break;
         default:
             field.setTerrain(row, col, PLAIN);
         }
@@ -52,6 +58,12 @@ void loadMap(std::istream &is, Field &field) {
         case 'B':
             field.setUnit(row, col, BEE);
             break;
+        case 'F':
+            field.setUnit(row, col, FLIGHTER);
+            break;
+        case 'H':
+            field.setUnit(row, col, HYDRAULISK);
+            break;
         }
     }
 
@@ -62,66 +74,151 @@ void loadMap(std::istream &is, Field &field) {
 // Main loop for playing the game
 void play(Field &field, istream &is, ostream &os) {
     while (is) {
-        displayField(os, field);
-
-        // select unit
-        Unit *u = nullptr;
-        int row, col;
-        while (true) {
-            os << "Please select a unit:" << endl;
-            is >> row >> col;
-            if (field.getUnit(row, col) == nullptr) {
-                os << "No unit at (" << row << ", " << col << ")!" << endl;
-            } else if (field.getUnit(row, col)->getSide() == false) {
-                os << " Unit at (" << row << ", " << col << ") is an enemy!" << endl;
-            } else {
-                break; // valid unit selected
-            }
-        }
-        u = field.getUnit(row, col);
-
-        // select action
-        vector<Action> actionList = getActions(u);
-        // if (isAllSkip(actionList)) {
-        //     os << "No more actable units in this turn!" << endl;
-        //     continue; // skip to the next loop
-        // }
-
-        int act;
-        while (true) {
-            for (int i = 0; i < actionList.size(); i++) {
-                switch (actionList[i]) {
-                case MOVE:
-                    os << i + 1 << ". Move ";
-                    break;
-                case ATTACK:
-                    os << i + 1 << ". Attack ";
-                    break;
-                case SKIP:
-                    os << i + 1 << ". Skip ";
-                    break;
+        Grid<bool> actionable(field.getHeight(), field.getWidth());
+        // 重置己方单位状态 //////////////////////////////////////////
+        for (int i = 0; i < field.getHeight(); i++)
+            for (int j = 0; j < field.getWidth(); j++) {
+                Unit *unit = field.getUnit(i, j);
+                if (unit != nullptr) {
+                    unit->setMoved(false);
+                    unit->setAttacked(false);
+                    if (unit->getSide() == true) actionable[i][j] = true; // Mark as actionable
                 }
             }
-            os << endl
-               << "Select your action: " << endl;
 
-            is >> act;
-            if (act > 0 && act < actionList.size() + 1) break;
-            // else if invalid action
-            os << "Invalid action!" << endl;
+        displayField(os, field); // 打印地图 //////////////////////////////////////////
+
+        // Check if the game is over //////////////////////////////////////////
+        int playerCount = 0, enemyCount = 0;
+        for (int i = 0; i < field.getHeight(); i++)
+            for (int j = 0; j < field.getWidth(); j++) {
+                Unit *unit = field.getUnit(i, j);
+                if (unit != nullptr) {
+                    if (unit->getSide() == true)
+                        playerCount++;
+                    else
+                        enemyCount++;
+                }
+            }
+
+        if (enemyCount == 0) {
+            os << "won" << endl;
+            return; // Player wins
+        } else if (playerCount == 0) {
+            os << "Failed" << endl;
+            return; // Player loses
         }
-        Action selectedAction = actionList[act - 1];
 
-        // perform action
-        // A function called performAction is defined below.
-        // You can use it or define your own version.
-        bool success = performAction(field, is, os, u, selectedAction);
+        // Player's turn ////////////////////////////////////////////////////////
+        while (true) {
+            // Check if there are any actable units
+            bool hasActableUnit = false;
+            for (int i = 0; i < field.getHeight(); i++) {
+                for (int j = 0; j < field.getWidth(); j++) {
+                    Unit *unit = field.getUnit(i, j);
+                    if (unit == nullptr || unit->getSide() == false) actionable[i][j] = false;
+                    if (unit != nullptr && unit->getSide() == true && (unit->hasMoved() && unit->hasAttacked())) {
+                        actionable[i][j] = false; // Mark as not actionable
+                    }
+                    if (unit != nullptr && unit->getSide() == true && (!unit->hasMoved() || !unit->hasAttacked())) {
+                        actionable[i][j] = true; // Mark as actionable
+                        hasActableUnit = true;
+                    }
+                }
+            }
+            if (!hasActableUnit) {
+                os << "No more actable units." << endl;
+                break; // exit the loop if no actable units
+            }
 
-        // The following line is needed in task 1 and task2.
-        // It avoids entering the next loop
-        // when reaches the end of the input data.
-        // Remove it in task 3 and task 4.
-        if (is.eof()) break;
+            // Display the field with actionable units
+            displayField(os, field, actionable, DP_ACTIONABLE);
+
+            // Ask if the player wants to skip their turn
+            char skip_choice;
+            os << " End this turn (y,n)?" << endl;
+            is >> skip_choice;
+            if (skip_choice == 'y' || skip_choice == 'Y') {
+                break;
+            }
+
+            // select unit
+            Unit *u = nullptr;
+            int row, col;
+            while (true) {
+                os << "Please select a unit:" << endl;
+                is >> row >> col;
+                if (field.getUnit(row, col) == nullptr) {
+                    os << "No unit at (" << row << ", " << col << ")!" << endl;
+                } else if (field.getUnit(row, col)->getSide() == false) {
+                    os << " Unit at (" << row << ", " << col << ") is an enemy!" << endl;
+                } else if (!actionable[row][col]) {
+                    os << " Unit at (" << row << ", " << col << ") is not actable!" << endl;
+                } else {
+                    break; // valid unit selected
+                }
+            }
+            u = field.getUnit(row, col);
+
+            // select action
+            vector<Action> actionList = getActions(u);
+
+            int act;
+            while (true) {
+                for (int i = 0; i < actionList.size(); i++) {
+                    switch (actionList[i]) {
+                    case MOVE:
+                        os << i + 1 << ".Move ";
+                        break;
+                    case ATTACK:
+                        os << i + 1 << ".Attack ";
+                        break;
+                    case SKIP:
+                        os << i + 1 << ".Skip ";
+                        break;
+                    }
+                }
+                os << endl
+                   << "Select your action: " << endl;
+
+                is >> act;
+                if (act > 0 && act < actionList.size() + 1) break;
+                // else if invalid action
+                os << "Invalid action!" << endl;
+            }
+            Action selectedAction = actionList[act - 1];
+
+            // perform action
+            // A function called performAction is defined below.
+            // You can use it or define your own version.
+            bool success = performAction(field, is, os, u, selectedAction);
+        }
+
+        // Enemy's turn ////////////////////////////////////////////////////////
+        for (int i = 0; i < field.getHeight(); i++) {    // 遍历row，row小的单位先行动
+            for (int j = 0; j < field.getWidth(); j++) { // 遍历col，row相同时col小的单位先行动
+                Unit *unit = field.getUnit(i, j);
+                if (unit != nullptr && unit->getSide() == false) { // Enemy unit
+                    if (unit->hasMoved()) continue;
+                    // Perform actions fors the enemy unit
+                    performEnemyAction(field, unit);
+                }
+            }
+        }
+
+        // FOREST's special effect ////////////////////////////////////////////////////////
+        for (int i = 0; i < field.getHeight(); i++) {
+            for (int j = 0; j < field.getWidth(); j++) {
+                if (field.getTerrain(i, j).getType() == FOREST) {
+                    for (int r = i - 2; r <= i + 2; r++) {
+                        for (int c = j - 2; c <= j + 2; c++) {
+                            if (actionable.inBounds(r, c) && field.getUnit(r, c) != nullptr)
+                                field.getUnit(r, c)->receiveDamage(-1); // Heal the unit
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -176,6 +273,7 @@ void printHLine(ostream &os, int n) {
 string getDpSymbol(dp_mode dp) {
     if (dp == DP_MOVE) return ".";
     if (dp == DP_ATTACK) return "*";
+    if (dp == DP_ACTIONABLE) return "+";
 
     return " ";
 }
@@ -184,13 +282,13 @@ bool performAction(Field &field, istream &is, ostream &os, Unit *u, Action act) 
     switch (act) {
     case MOVE:
         return performMove(os, is, field, u);
-
+        break;
     case ATTACK:
         return performAttack(os, is, field, u);
-
+        break;
     case SKIP:
         return true;
-
+        break;
     default:
         os << "(Action not implemented yet)" << endl;
         return false;
@@ -215,16 +313,20 @@ bool performMove(ostream &os, istream &is, Field &field, Unit *u) {
         // else if the target coordinate is not reachable
         os << "Not a valid destination" << endl;
     }
+    u->setMoved(true); // Mark the unit as moved
     return field.moveUnit(u->getRow(), u->getCol(), trow, tcol);
 }
 
+// Perform the attack action
 bool performAttack(ostream &os, istream &is, Field &field, Unit *u) {
     // Display the reachable points
     Grid<bool> grd;
-    if (u->getType() == SOLDIER || u->getType() == BEE)
-        grd = searchCloseAttackable(field, u->getRow(), u->getCol());
-    else
+    if (u->getType() == TANK)
         grd = searchFarAttackable(field, u->getRow(), u->getCol());
+    else if (u->getType() == FLIGHTER)
+        grd = searchFlightAttackable(field, u->getRow(), u->getCol());
+    else
+        grd = searchCloseAttackable(field, u->getRow(), u->getCol());
 
     displayField(os, field, grd, DP_ATTACK);
 
@@ -238,7 +340,53 @@ bool performAttack(ostream &os, istream &is, Field &field, Unit *u) {
         // else if the target coordinate is not reachable
         os << "Not a valid target" << endl;
     }
+    u->setAttacked(true); // Mark the unit as attacked
     return field.attackUnit(u, trow, tcol);
+}
+
+// Perform Enemy's action
+bool performEnemyAction(Field &field, Unit *u) {
+    // Move
+    Grid<bool> grd =
+        searchReachable(getFieldCosts(field, u), u->getRow(), u->getCol(), u->getMovPoints());
+
+    // Find the best position to move
+    int bestValue = -1;
+    int bestRow = -1, bestCol = -1;
+    for (int i = 0; i < grd.numRows(); i++) {
+        for (int j = 0; j < grd.numCols(); j++) {
+            if (grd[i][j]) {
+                int value = getPositionValue(field, i, j);
+                if (value > bestValue) { // If the position is valuable
+                    bestRow = i;
+                    bestCol = j;
+                    bestValue = value;
+                }
+            }
+        }
+    }
+    field.moveUnit(u->getRow(), u->getCol(), bestRow, bestCol);
+    u->setMoved(true); // Mark the unit as moved
+
+    // Attack
+    Grid<bool> grd2 = searchCloseAttackable(field, u->getRow(), u->getCol());
+
+    Unit *targetToAttack = nullptr;
+    for (int i = 0; i < grd2.numRows(); i++) {
+        for (int j = 0; j < grd2.numCols(); j++) {
+            if (grd2[i][j] && field.getUnit(i, j) != nullptr) { // If the cell is reachable and has a unit
+                Unit *target = field.getUnit(i, j);
+                if (target->getSide() == true) { // If the target is an enemy
+                    targetToAttack = target;
+                    break;
+                }
+            }
+        }
+        if (targetToAttack != nullptr) break; // Found a target to attack
+    }
+    if (targetToAttack != nullptr) field.attackUnit(u, targetToAttack->getRow(), targetToAttack->getCol());
+    u->setAttacked(true); // Mark the unit as attacked
+    return true;          // Successfully performed the enemy action
 }
 
 // Convert field to costs
@@ -250,21 +398,58 @@ Grid<int> getFieldCosts(const Field &field, Unit *u) {
 
     for (int i = 0; i < h; i++)
         for (int j = 0; j < w; j++) {
-            // switch (field.getUnit(i, j)->getType()) {
-            //    case SOLDIER:
-            if (u->getRow() == i && u->getCol() == j) { // 当前单位
-                costs[i][j] = 0;
-            } else if (field.getUnit(i, j) == nullptr &&            // 无单位
-                       field.getTerrain(i, j).getType() == PLAIN) { // 且是平原
-                costs[i][j] = 1;
-            } else { // 有单位或非平原
-                costs[i][j] = 100;
+            switch (u->getType()) {
+            case SOLDIER:
+            case TANK:
+            case HYDRAULISK:
+                if (u->getRow() == i && u->getCol() == j) { // 当前单位
+                    costs[i][j] = 0;
+                } else if (field.getUnit(i, j) == nullptr &&                  // 无单位
+                           (field.getTerrain(i, j).getType() == PLAIN         // 且是平原
+                            || field.getTerrain(i, j).getType() == FOREST)) { // 或者是森林
+                    costs[i][j] = 1;
+                } else { // 有单位或山或海
+                    costs[i][j] = 100;
+                }
+                break;
+            case BEE:
+            case FLIGHTER:
+                if (u->getRow() == i && u->getCol() == j) { // 当前单位
+                    costs[i][j] = 0;
+                } else if (field.getUnit(i, j) == nullptr &&                 // 无单位
+                           (field.getTerrain(i, j).getType() == PLAIN        // 且是平原
+                            || field.getTerrain(i, j).getType() == OCEAN)) { // 或者是海洋
+                    costs[i][j] = 1;
+                } else { // 有单位或山或森林
+                    costs[i][j] = 100;
+                }
+                break;
             }
-            //    break;
-            //    case TANK:
-            //    break;
-            // }
         }
 
     return costs;
+}
+
+int getPositionValue(const Field &field, int row, int col) {
+    int h = field.getHeight();
+    int w = field.getWidth();
+
+    int min_distance = 999;
+    // 遍历所有格子
+    for (int i = 0; i < h; i++) {
+        for (int j = 0; j < w; j++) {
+            if (field.getUnit(i, j) != nullptr && field.getUnit(i, j)->getSide() == true) {
+                // 如果是己方单位，计算距离
+                int d = distance(row, col, i, j);
+                if (d < min_distance) {
+                    min_distance = d; // 更新最小距离
+                }
+            }
+        }
+    }
+    return 999 - min_distance;
+}
+
+int distance(int row1, int col1, int row2, int col2) {
+    return abs(row1 - row2) + abs(col1 - col2); // 曼哈顿距离
 }

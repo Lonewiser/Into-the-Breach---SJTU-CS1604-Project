@@ -39,7 +39,7 @@ void Field::setUnit(int row, int col, UnitType unitType) {
     if (units[row][col] != nullptr) {
         delete units[row][col]; // Delete the existing unit
     }
-    if (unitType == SOLDIER || unitType == TANK)
+    if (unitType == SOLDIER || unitType == TANK || unitType == FLIGHTER)
         units[row][col] = new Unit(unitType, true, row, col); // Create a new unit
     else
         units[row][col] = new Unit(unitType, false, row, col); // Create a new unit
@@ -85,8 +85,9 @@ bool Field::attackUnit(Unit *u, int trow, int tcol) {
 
     switch (utype) {
     case SOLDIER:
+    case BEE:
         if (target != nullptr) {
-            target->attacked(u->getAttackPoints());
+            target->receiveDamage(u->getAttackPoints());
         }
         break;
 
@@ -95,10 +96,33 @@ bool Field::attackUnit(Unit *u, int trow, int tcol) {
             terrains[trow][tcol].setType(PLAIN); // TANK can destroy MOUNTAIN
         }
         if (target != nullptr) {
-            target->attacked(u->getAttackPoints());
+            target->receiveDamage(u->getAttackPoints());
             beatBack(u->getRow(), u->getCol(), target);
         }
         break;
+    case FLIGHTER:
+        if (target != nullptr) {
+            target->receiveDamage(u->getAttackPoints());
+        }
+        // beat back four directions
+        if (units.inBounds(trow - 1, tcol) && units[trow - 1][tcol] != nullptr) {
+            beatBack(trow, tcol, units[trow - 1][tcol]);
+        }
+        if (units.inBounds(trow + 1, tcol) && units[trow + 1][tcol] != nullptr) {
+            beatBack(trow, tcol, units[trow + 1][tcol]);
+        }
+        if (units.inBounds(trow, tcol - 1) && units[trow][tcol - 1] != nullptr) {
+            beatBack(trow, tcol, units[trow][tcol - 1]);
+        }
+        if (units.inBounds(trow, tcol + 1) && units[trow][tcol + 1] != nullptr) {
+            beatBack(trow, tcol, units[trow][tcol + 1]);
+        }
+        break;
+    case HYDRAULISK:
+        if (target != nullptr) {
+            target->receiveDamage(u->getAttackPoints());
+            beatBack(u->getRow(), u->getCol(), target);
+        }
     default:
         break;
     }
@@ -142,8 +166,8 @@ void Field::beatBack(int srow, int scol, Unit *u) {
 
     if (!units.inBounds(newRow, newCol)) return; // Out of bounds
     if (units[newRow][newCol] != nullptr) {
-        u->attacked(1);                       // If the new position is occupied, the unit takes 1 damage
-        getUnit(newRow, newCol)->attacked(1); // The unit in the new position also takes 1 damage
+        u->receiveDamage(1);                       // If the new position is occupied, the unit takes 1 damage
+        getUnit(newRow, newCol)->receiveDamage(1); // The unit in the new position also takes 1 damage
         return;
     }
 
@@ -154,12 +178,19 @@ void Field::beatBack(int srow, int scol, Unit *u) {
         moveUnit(trow, tcol, newRow, newCol); // Move the unit to the new position
         break;
     case MOUNTAIN:
-        u->attacked(1);                          // If the terrain is MOUNTAIN, the unit takes 1 damage
+        u->receiveDamage(1);                     // If the terrain is MOUNTAIN, the unit takes 1 damage
         terrains[newRow][newCol].setType(PLAIN); // MOUNTAIN becomes PLAIN
         break;
     case OCEAN:
-        if (u->getType() == SOLDIER || u->getType() == TANK) {
-            u->attacked(999); // get destroyed
+        if (u->getType() == SOLDIER || u->getType() == TANK || u->getType() == HYDRAULISK) {
+            u->receiveDamage(999); // get destroyed
+        } else {
+            moveUnit(trow, tcol, newRow, newCol); // Move the unit to the new position
+        }
+        break;
+    case FOREST:
+        if (u->getType() == SOLDIER || u->getType() == TANK || u->getType() == HYDRAULISK) {
+            moveUnit(trow, tcol, newRow, newCol); // Move the unit to the new position
         }
         break;
     default:

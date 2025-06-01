@@ -18,6 +18,13 @@ Unit::Unit(UnitType t, bool sd, int row, int col) :
     case BEE:
         hp = 2;
         break;
+    case FLIGHTER:
+        hp = 2;
+        break;
+    case HYDRAULISK:
+        hp = 1;
+        break;
+
     default:
         break;
     }
@@ -35,6 +42,12 @@ string Unit::getSymbol() const {
         break;
     case BEE:
         symbol = side ? "B" : "b";
+        break;
+    case FLIGHTER:
+        symbol = side ? "F" : "f";
+        break;
+    case HYDRAULISK:
+        symbol = side ? "H" : "h";
         break;
     }
     symbol += to_string(hp);
@@ -63,7 +76,7 @@ void Unit::move(int row, int col) {
 }
 
 // Being attacked
-void Unit::attacked(int damage) {
+void Unit::receiveDamage(int damage) {
     hp -= damage;
     if (hp <= 0) {
         // Handle unit destruction logic here, e.g., remove from field
@@ -84,6 +97,10 @@ int Unit::getMovPoints() const {
         return 2;
     case BEE:
         return 3;
+    case FLIGHTER:
+        return 5;
+    case HYDRAULISK:
+        return 3;
     default:
         return 0;
     }
@@ -98,6 +115,10 @@ int Unit::getAttackPoints() const {
         return 1;
     case BEE:
         return 3;
+    case FLIGHTER:
+        return 2;
+    case HYDRAULISK:
+        return 2;
     default:
         return 0; // Default to 0 for unknown types
     }
@@ -111,4 +132,24 @@ bool Unit::isAlive() const {
 // Get the unit type
 UnitType Unit::getType() const {
     return type;
+}
+
+// Check if the unit has moved
+bool Unit::hasMoved() const {
+    return moved;
+}
+
+// Check if the unit has attacked
+bool Unit::hasAttacked() const {
+    return attacked;
+}
+
+// Set the moved status
+void Unit::setMoved(bool m) {
+    moved = m;
+}
+
+// Set the attacked status
+void Unit::setAttacked(bool a) {
+    attacked = a;
 }
