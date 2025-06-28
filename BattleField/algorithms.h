@@ -2,7 +2,7 @@
 #define ALGORITHMS_H_INCLUDED
 
 /**** Algorithms for the game ****/
-#include "Grid.h"
+#include "NewGrid.h"
 #include "field.h"
 
 /** Path finding algorithm **/

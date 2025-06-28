@@ -1,6 +1,6 @@
 #include "algorithms.h"
 #include <vector>
-#include "Grid.h"
+#include "NewGrid.h"
 #include <cassert>
 
 using namespace std;

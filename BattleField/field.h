@@ -1,7 +1,7 @@
 #ifndef FIELD_H_INCLUDED
 #define FIELD_H_INCLUDED
 
-#include "Grid.h"
+#include "NewGrid.h"
 #include "terrain.h"
 #include "unit.h"
 

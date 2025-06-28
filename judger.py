@@ -11,6 +11,7 @@ TASKS = [
     ('2_task2', ['actions.cpp', 'algorithms.cpp','engine.cpp','field.cpp','terrain.cpp','unit.cpp','main.cpp']),
     ('3_task3', ['actions.cpp', 'algorithms.cpp','engine.cpp','field.cpp','terrain.cpp','unit.cpp','main.cpp']),
     ('4_task4', ['actions.cpp', 'algorithms.cpp','engine.cpp','field.cpp','terrain.cpp','unit.cpp','main.cpp']),
+    ('hidden_cases', ['actions.cpp', 'algorithms.cpp','engine.cpp','field.cpp','terrain.cpp','unit.cpp','main.cpp']),
 ]
 TASK_NAMES = [n for n, _ in TASKS]
 TASK_NAME_TO_I = {n: i for i, n in enumerate(TASK_NAMES)}
